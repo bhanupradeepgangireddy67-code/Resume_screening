@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Dashboard - Resume Screener{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Candidate Dashboard</h3>
+    <p class="text-muted small mb-0">Welcome back, {{ session.get('user_name', 'Student') }}. Here are your resume match results and applications.</p>
+  </div>
+  <a href="{{ url_for('candidate_jobs') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-briefcase me-1"></i> Browse Open Jobs
+  </a>
+</div>
+
+<!-- Dynamic Candidate Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-primary">{{ applications|length }}</div>
+        <div class="stat-label">Jobs Applied</div>
+      </div>
+      <div class="stat-icon text-primary"><i class="bi bi-file-earmark-check"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-success">{{ top_score }}%</div>
+        <div class="stat-label">Top Match Score</div>
+      </div>
+      <div class="stat-icon text-success"><i class="bi bi-trophy"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-info">{{ shortlisted_count }}</div>
+        <div class="stat-label">Shortlisted</div>
+      </div>
+      <div class="stat-icon text-info"><i class="bi bi-check-circle"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-warning">{{ interviews|length }}</div>
+        <div class="stat-label">Interviews Scheduled</div>
+      </div>
+      <div class="stat-icon text-warning"><i class="bi bi-calendar-event"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Upcoming Interviews Alert if any -->
+{% if interviews %}
+  <div class="alert alert-info border-0 shadow-sm rounded-3 mb-4 p-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-calendar-check-fill fs-2 text-primary"></i>
+        <div>
+          <h6 class="fw-bold mb-1 text-dark">You have an interview scheduled!</h6>
+          <small class="text-secondary">
+            <strong>{{ interviews[0].job_title }}</strong> on <strong>{{ interviews[0].date }}</strong> at <strong>{{ interviews[0].time }}</strong> ({{ interviews[0].interview_type }})
+          </small>
+        </div>
+      </div>
+      {% if interviews[0].meeting_link %}
+        <a href="{{ interviews[0].meeting_link }}" target="_blank" class="btn btn-primary btn-sm px-3">
+          <i class="bi bi-camera-video me-1"></i> Join Meeting Link
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<!-- My Applications & Match Results Table -->
+<div class="custom-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-card-checklist me-2"></i> My Applications & Match Scores</span>
+    <a href="{{ url_for('candidate_jobs') }}" class="btn btn-sm btn-outline-primary">Apply to Another Job</a>
+  </div>
+  <div class="card-body p-0">
+    {% if applications %}
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Resume File</th>
+              <th>Skills Found</th>
+              <th>Match Score</th>
+              <th>Status</th>
+              <th>Applied Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+              <tr>
+                <td>
+                  <strong class="text-dark">{{ app.job_title }}</strong>
+                  <div class="small text-muted">Required: {{ app.job_skills }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> {{ app.resume_filename }}
+                  </span>
+                </td>
+                <td style="max-width: 250px;">
+                  <div class="text-truncate" title="{{ app.skills }}">
+                    {% if app.skills and app.skills != 'None detected' %}
+                      {% for sk in app.skills.split(',')[:3] %}
+                        <span class="skill-tag">{{ sk.strip() }}</span>
+                      {% endfor %}
+                      {% if app.skills.split(',')|length > 3 %}
+                        <span class="small text-muted">+{{ app.skills.split(',')|length - 3 }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted small">None detected</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td style="min-width: 150px;">
+                  <div class="score-wrapper">
+                    <span class="fw-bold small {% if app.match_score >= 70 %}text-success{% elif app.match_score >= 40 %}text-primary{% else %}text-secondary{% endif %}">
+                      {{ app.match_score }}%
+                    </span>
+                    <div class="score-bar">
+                      <div class="score-fill {% if app.match_score >= 70 %}bg-success{% elif app.match_score >= 40 %}bg-primary{% else %}bg-secondary{% endif %}"
+                           style="width: {{ app.match_score }}%;"></div>
+                    </div>
+                  </div>
+                  <small class="text-secondary" style="font-size: 0.72rem;">Skill & Text Match</small>
+                </td>
+                <td>
+                  {% if app.status == 'Shortlisted' %}
+                    <span class="badge-status badge-shortlisted"><i class="bi bi-check-circle"></i> Shortlisted</span>
+                  {% elif app.status == 'Rejected' %}
+                    <span class="badge-status badge-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                  {% elif app.status == 'Interview Scheduled' %}
+                    <span class="badge-status badge-interview"><i class="bi bi-calendar-event"></i> Interview</span>
+                  {% else %}
+                    <span class="badge-status badge-pending"><i class="bi bi-hourglass-split"></i> In Review</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted small">{{ app.created_at[:10] }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{{ url_for('delete_candidate_application', application_id=app.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-confirm-delete"
+                            data-confirm-message="Delete this application and its uploaded resume? This cannot be undone.">
+                      <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3 text-secondary opacity-50"></i>
+        <h5>No Resumes Uploaded Yet</h5>
+        <p class="small mb-3">Browse available jobs and upload your resume to see your real-time match score!</p>
+        <a href="{{ url_for('candidate_jobs') }}" class="btn btn-primary btn-sm">Explore Open Positions</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

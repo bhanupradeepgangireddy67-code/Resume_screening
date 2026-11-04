@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Interviews - Resume Screener{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Interviews List</h3>
+    <p class="text-muted small mb-0">Track all upcoming and completed interviews with candidates.</p>
+  </div>
+  <a href="{{ url_for('candidates') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-people me-1"></i> View Candidates
+  </a>
+</div>
+
+<div class="custom-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-calendar3 me-2"></i> All Scheduled Interviews ({{ interviews|length }})</span>
+  </div>
+  <div class="card-body p-0">
+    {% if interviews %}
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Job Title</th>
+              <th>Date & Time</th>
+              <th>Mode</th>
+              <th>Link / Location</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in interviews %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('candidate_details', id=item.candidate_id) }}" class="fw-bold text-dark d-block">
+                    {{ item.candidate_name }}
+                  </a>
+                  <small class="text-muted">{{ item.candidate_email }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ item.job_title }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark"><i class="bi bi-calendar-event me-1 text-primary"></i> {{ item.date }}</div>
+                  <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ item.time }}</small>
+                </td>
+                <td>
+                  {% if item.interview_type == 'Online' %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                      Online
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                      In-Person
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="max-width: 220px;">
+                  {% if item.meeting_link %}
+                    {% if item.meeting_link.startswith('http') %}
+                      <a href="{{ item.meeting_link }}" target="_blank" class="text-primary text-truncate d-inline-block" style="max-width: 200px;">
+                        <i class="bi bi-link-45deg"></i> Open Link
+                      </a>
+                    {% else %}
+                      <span class="text-secondary small">{{ item.meeting_link }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted small">Not provided</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'Completed' %}
+                    <span class="badge-status badge-completed">Completed</span>
+                  {% elif item.status == 'Cancelled' %}
+                    <span class="badge-status badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="badge-status badge-scheduled">Scheduled</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('candidate_details', id=item.candidate_id) }}" class="btn btn-outline-secondary" title="View Profile">
+                      View
+                    </a>
+                    {% if item.status == 'Scheduled' %}
+                      <a href="{{ url_for('complete_interview', id=item.id) }}" class="btn btn-outline-success" title="Mark as Completed">
+                        Complete
+                      </a>
+                      <a href="{{ url_for('cancel_interview', id=item.id) }}" class="btn btn-outline-danger" title="Cancel Interview" onclick="return confirm('Cancel this interview?');">
+                        Cancel
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-calendar-x fs-1 d-block mb-3 text-secondary opacity-50"></i>
+        <h5>No Interviews Scheduled</h5>
+        <p class="small mb-3">Shortlist high-scoring candidates to set up interviews.</p>
+        <a href="{{ url_for('candidates') }}" class="btn btn-primary btn-sm">Browse Candidates</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidates - Resume Screener{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Candidate Rankings</h3>
+    <p class="text-muted small mb-0">Candidates sorted by highest match score first.</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if jobs %}
+      <form method="GET" action="{{ url_for('candidates') }}" class="d-flex gap-2">
+        <select name="job_id" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Jobs</option>
+          {% for j in jobs %}
+            <option value="{{ j.id }}" {% if selected_job_id|string == j.id|string %}selected{% endif %}>
+              {{ j.title }}
+            </option>
+          {% endfor %}
+        </select>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="custom-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-ol me-2"></i> Ranked Candidates</span>
+    <span class="badge bg-secondary-subtle text-secondary border">{{ candidates|length }} candidates</span>
+  </div>
+  <div class="card-body p-0">
+    {% if candidates %}
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Rank</th>
+              <th>Candidate Name</th>
+              <th>Job Applied</th>
+              <th>Skills Found</th>
+              <th style="width: 170px;">Match Score</th>
+              <th>Status</th>
+              <th class="text-end" style="width: 200px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cand in candidates %}
+              <tr>
+                <td class="fw-bold fs-6 text-muted">
+                  {% if loop.index == 1 %}<i class="bi bi-trophy-fill text-warning me-1"></i>{% endif %}
+                  #{{ loop.index }}
+                </td>
+                <td>
+                  <a href="{{ url_for('candidate_details', id=cand.id) }}" class="fw-bold text-dark d-block">
+                    {{ cand.name }}
+                  </a>
+                  <small class="text-muted">{{ cand.email }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ cand.job_title }}</span>
+                </td>
+                <td style="max-width: 220px;">
+                  <div class="text-truncate" title="{{ cand.skills }}">
+                    {% if cand.skills and cand.skills != 'None detected' %}
+                      {% for skill in cand.skills.split(',')[:3] %}
+                        <span class="skill-tag">{{ skill.strip() }}</span>
+                      {% endfor %}
+                      {% if cand.skills.split(',')|length > 3 %}
+                        <span class="small text-muted">+{{ cand.skills.split(',')|length - 3 }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted small">None</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="score-wrapper">
+                    <span class="fw-bold small {% if cand.match_score >= 70 %}text-success{% elif cand.match_score >= 40 %}text-primary{% else %}text-secondary{% endif %}" style="min-width: 45px;">
+                      {{ cand.match_score }}%
+                    </span>
+                    <div class="score-bar">
+                      <div class="score-fill {% if cand.match_score >= 70 %}bg-success{% elif cand.match_score >= 40 %}bg-primary{% else %}bg-secondary{% endif %}"
+                           style="width: {{ cand.match_score }}%;"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if cand.status == 'Shortlisted' %}
+                    <span class="badge-status badge-shortlisted">Shortlisted</span>
+                  {% elif cand.status == 'Rejected' %}
+                    <span class="badge-status badge-rejected">Rejected</span>
+                  {% elif cand.status == 'Interview Scheduled' %}
+                    <span class="badge-status badge-interview">Interview</span>
+                  {% else %}
+                    <span class="badge-status badge-pending">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('candidate_details', id=cand.id) }}" class="btn btn-outline-secondary" title="View Profile">
+                      View
+                    </a>
+                    {% if cand.status != 'Shortlisted' and cand.status != 'Interview Scheduled' %}
+                      <a href="{{ url_for('shortlist_candidate', id=cand.id) }}" class="btn btn-outline-success" title="Shortlist">
+                        <i class="bi bi-check-lg"></i>
+                      </a>
+                    {% endif %}
+                    {% if cand.status != 'Rejected' %}
+                      <a href="{{ url_for('reject_candidate', id=cand.id) }}" class="btn btn-outline-danger" title="Reject">
+                        <i class="bi bi-x-lg"></i>
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-people fs-1 d-block mb-3 text-secondary opacity-50"></i>
+        <h5>No Candidates Found</h5>
+        <p class="small mb-0">Candidates will appear here after applying through their portal.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

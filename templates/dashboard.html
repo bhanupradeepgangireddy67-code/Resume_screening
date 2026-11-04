@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Resume Screener{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Recruiter Dashboard</h3>
+    <p class="text-muted small mb-0">Welcome, {{ session.get('user_name', 'Recruiter') }}. Here is a summary of your jobs and candidates.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('create_job') }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-plus-circle me-1"></i> Post New Job
+    </a>
+    <a href="{{ url_for('candidates') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-people me-1"></i> View Candidates
+    </a>
+  </div>
+</div>
+
+<!-- Simple Stat Cards from Database -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-primary">{{ stats.total_jobs }}</div>
+        <div class="stat-label">Total Jobs</div>
+      </div>
+      <div class="stat-icon text-primary"><i class="bi bi-briefcase"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-info">{{ stats.total_candidates }}</div>
+        <div class="stat-label">Total Candidates</div>
+      </div>
+      <div class="stat-icon text-info"><i class="bi bi-people"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-success">{{ stats.shortlisted }}</div>
+        <div class="stat-label">Shortlisted</div>
+      </div>
+      <div class="stat-icon text-success"><i class="bi bi-person-check"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-danger">{{ stats.rejected }}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+      <div class="stat-icon text-danger"><i class="bi bi-person-x"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl">
+    <div class="stat-card">
+      <div>
+        <div class="stat-value text-warning">{{ stats.upcoming_interviews }}</div>
+        <div class="stat-label">Interviews</div>
+      </div>
+      <div class="stat-icon text-warning"><i class="bi bi-calendar-event"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Top Candidates List -->
+  <div class="col-lg-8">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-trophy text-warning me-2"></i> Top Candidates (Highest Match Score First)</span>
+        <a href="{{ url_for('candidates') }}" class="btn btn-sm btn-link p-0 text-decoration-none">View All Candidates &rarr;</a>
+      </div>
+      <div class="card-body p-0">
+        {% if top_candidates %}
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Candidate</th>
+                  <th>Job Title</th>
+                  <th>Match Score</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cand in top_candidates %}
+                  <tr>
+                    <td class="fw-bold text-muted">#{{ loop.index }}</td>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ cand.name }}</div>
+                      <small class="text-muted">{{ cand.email }}</small>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ cand.job_title }}</span></td>
+                    <td style="min-width: 140px;">
+                      <div class="score-wrapper">
+                        <span class="fw-bold small {% if cand.match_score >= 70 %}text-success{% elif cand.match_score >= 40 %}text-primary{% else %}text-secondary{% endif %}">
+                          {{ cand.match_score }}%
+                        </span>
+                        <div class="score-bar">
+                          <div class="score-fill {% if cand.match_score >= 70 %}bg-success{% elif cand.match_score >= 40 %}bg-primary{% else %}bg-secondary{% endif %}"
+                               style="width: {{ cand.match_score }}%;"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {% if cand.status == 'Shortlisted' %}
+                        <span class="badge-status badge-shortlisted">Shortlisted</span>
+                      {% elif cand.status == 'Rejected' %}
+                        <span class="badge-status badge-rejected">Rejected</span>
+                      {% elif cand.status == 'Interview Scheduled' %}
+                        <span class="badge-status badge-interview">Interview</span>
+                      {% else %}
+                        <span class="badge-status badge-pending">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{{ url_for('candidate_details', id=cand.id) }}" class="btn btn-sm btn-outline-primary py-1 px-2">
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+            No candidate applications yet. Candidates can browse job openings and apply from their portal.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Jobs -->
+  <div class="col-lg-4">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-briefcase me-2"></i> Recent Jobs</span>
+        <a href="{{ url_for('jobs') }}" class="btn btn-sm btn-link p-0 text-decoration-none">Manage &rarr;</a>
+      </div>
+      <div class="card-body">
+        {% if recent_jobs %}
+          <div class="list-group list-group-flush">
+            {% for job in recent_jobs %}
+              <div class="list-group-item px-0 py-3 border-bottom">
+                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                  <a href="{{ url_for('job_details', id=job.id) }}" class="fw-bold text-dark text-truncate me-2">
+                    {{ job.title }}
+                  </a>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    {{ job.candidate_count }} applicant{{ 's' if job.candidate_count != 1 else '' }}
+                  </span>
+                </div>
+                <div class="small text-muted mb-2 text-truncate">
+                  Skills: {{ job.skills }}
+                </div>
+                <div class="d-flex justify-content-between align-items-center small">
+                  <span class="text-secondary"><i class="bi bi-clock"></i> {{ job.created_at[:10] }}</span>
+                  <a href="{{ url_for('job_details', id=job.id) }}" class="text-primary fw-semibold">View Details</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center text-muted py-3">
+            <p class="mb-3 small">No jobs created yet.</p>
+            <a href="{{ url_for('create_job') }}" class="btn btn-sm btn-primary">Post First Job</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Simple Background Queue Card -->
+    <div class="custom-card bg-light border-0">
+      <div class="card-body p-3">
+        <h6 class="fw-bold text-dark mb-1"><i class="bi bi-gear-wide-connected text-primary me-1"></i> Background Processing</h6>
+        <p class="small text-muted mb-2">
+          Resumes are processed in the background so you can continue using the site without waiting.
+        </p>
+        <span class="badge bg-success-subtle text-success border border-success-subtle">
+          <i class="bi bi-check-circle-fill me-1"></i> Running Normally
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

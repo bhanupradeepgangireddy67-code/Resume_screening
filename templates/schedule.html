@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Interview - Resume Screener{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h3 class="fw-bold text-dark mb-1">Schedule Interview</h3>
+        <p class="text-muted small mb-0">Set an interview date and time for {{ candidate.name }}.</p>
+      </div>
+      <a href="{{ url_for('candidate_details', id=candidate.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Candidate
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-primary-subtle p-3 text-primary fs-4">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-1">{{ candidate.name }}</h5>
+            <small class="text-muted">{{ candidate.email }} | Job: <strong>{{ candidate.job_title }}</strong></small>
+          </div>
+        </div>
+        <span class="badge bg-success fs-6">{{ candidate.match_score }}% Match</span>
+      </div>
+    </div>
+
+    <div class="custom-card">
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('schedule_interview', id=candidate.id) }}">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="date" class="form-label fw-semibold">Interview Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            <div class="col-md-6">
+              <label for="time" class="form-label fw-semibold">Interview Time <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" id="time" name="time" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="interview_type" class="form-label fw-semibold">Interview Mode <span class="text-danger">*</span></label>
+            <select class="form-select" id="interview_type" name="interview_type" required>
+              <option value="Online" selected>Online (Google Meet / Zoom)</option>
+              <option value="Offline">In-Person (Office / Room)</option>
+            </select>
+          </div>
+
+          <div class="mb-4" id="meeting-link-group">
+            <label for="meeting_link" class="form-label fw-semibold">Meeting Link or Location</label>
+            <input type="text" class="form-control" id="meeting_link" name="meeting_link" placeholder="e.g., https://meet.google.com/xyz or Room 101">
+            <div class="form-text">For online interviews, provide a meeting link. For offline, provide office address or room number.</div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+              <i class="bi bi-calendar-check me-1"></i> Save Interview
+            </button>
+            <a href="{{ url_for('candidate_details', id=candidate.id) }}" class="btn btn-outline-secondary px-4">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

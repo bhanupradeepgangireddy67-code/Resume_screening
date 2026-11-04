@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ candidate.name }} - Candidate Details{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h3 class="fw-bold text-dark mb-0">{{ candidate.name }}</h3>
+      {% if candidate.status == 'Shortlisted' %}
+        <span class="badge-status badge-shortlisted">Shortlisted</span>
+      {% elif candidate.status == 'Rejected' %}
+        <span class="badge-status badge-rejected">Rejected</span>
+      {% elif candidate.status == 'Interview Scheduled' %}
+        <span class="badge-status badge-interview">Interview Scheduled</span>
+      {% else %}
+        <span class="badge-status badge-pending">Pending Review</span>
+      {% endif %}
+    </div>
+    <p class="text-muted small mb-0">Applied for: <strong>{{ candidate.job_title }}</strong></p>
+  </div>
+  <a href="{{ url_for('candidates') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Candidates
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left Side: Match Score & Skills -->
+  <div class="col-lg-8">
+    <!-- Match Score -->
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-award text-primary me-2"></i> Match Score</span>
+        <span class="badge bg-primary fs-6">{{ candidate.match_score }}% Match</span>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center g-3 mb-4">
+          <div class="col-sm-4 text-center border-end">
+            <h1 class="display-4 fw-bold {% if candidate.match_score >= 70 %}text-success{% elif candidate.match_score >= 40 %}text-primary{% else %}text-secondary{% endif %} mb-0">
+              {{ candidate.match_score }}%
+            </h1>
+            <small class="text-muted fw-semibold">Match Percentage</small>
+          </div>
+          <div class="col-sm-8 ps-sm-4">
+            <h6 class="fw-bold text-dark mb-1">How is this score calculated?</h6>
+            <p class="text-muted small mb-3">
+              The system compares the skills and description of the job with the text in the candidate's resume using TF-IDF and Cosine Similarity.
+            </p>
+            <div class="progress" style="height: 12px;">
+              <div class="progress-bar {% if candidate.match_score >= 70 %}bg-success{% elif candidate.match_score >= 40 %}bg-primary{% else %}bg-secondary{% endif %}"
+                   role="progressbar" style="width: {{ candidate.match_score }}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills Comparison -->
+        <h6 class="fw-bold text-dark mb-2">Skills Comparison</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light border">
+              <span class="fw-bold text-success small d-block mb-2">
+                <i class="bi bi-check-circle-fill me-1"></i> Matched Skills (Found in Resume)
+              </span>
+              {% if matched_skills %}
+                {% for skill in matched_skills %}
+                  <span class="skill-tag"><i class="bi bi-check2"></i> {{ skill }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted small">No direct match with required skills.</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light border">
+              <span class="fw-bold text-danger small d-block mb-2">
+                <i class="bi bi-x-circle-fill me-1"></i> Missing Skills (Needed for Job)
+              </span>
+              {% if missing_skills %}
+                {% for skill in missing_skills %}
+                  <span class="skill-tag skill-tag-missing"><i class="bi bi-dash"></i> {{ skill }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-success small fw-semibold">All required skills are present!</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Profile Info -->
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-person text-secondary me-2"></i> Candidate Information</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Full Name</label>
+            <strong class="text-dark">{{ candidate.name }}</strong>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Email Address</label>
+            <strong class="text-dark">{{ candidate.email }}</strong>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Phone Number</label>
+            <strong class="text-dark">{{ candidate.phone }}</strong>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Resume File</label>
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-file-earmark me-1"></i> {{ candidate.resume_filename }}
+            </span>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Education</label>
+            <span class="text-dark fw-medium">{{ candidate.education or 'Not detected' }}</span>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small d-block">Experience</label>
+            <span class="text-dark fw-medium">{{ candidate.experience or 'Not detected' }}</span>
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-dark mb-2">All Skills Found in Resume</h6>
+        <div class="mb-4">
+          {% if candidate.skills and candidate.skills != 'None detected' %}
+            {% for skill in candidate.skills.split(',') %}
+              <span class="skill-tag">{{ skill.strip() }}</span>
+            {% endfor %}
+          {% else %}
+            <span class="text-muted small">No specific skills detected.</span>
+          {% endif %}
+        </div>
+
+        <h6 class="fw-bold text-dark mb-2">Resume Text Preview</h6>
+        <div class="p-3 bg-light rounded-3 border" style="max-height: 220px; overflow-y: auto;">
+          <pre class="small text-secondary mb-0" style="white-space: pre-wrap; font-family: monospace;">{{ candidate.resume_text[:2000] }}{% if candidate.resume_text|length > 2000 %}...{% endif %}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Recruiter Action Buttons -->
+  <div class="col-lg-4">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-lightning-charge me-2"></i> Recruiter Actions</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">Choose an action for this candidate:</p>
+        
+        <div class="d-grid gap-2 mb-3">
+          {% if candidate.status != 'Shortlisted' and candidate.status != 'Interview Scheduled' %}
+            <a href="{{ url_for('shortlist_candidate', id=candidate.id) }}" class="btn btn-success fw-semibold">
+              <i class="bi bi-check-circle me-1"></i> Shortlist Candidate
+            </a>
+          {% else %}
+            <button class="btn btn-outline-success fw-semibold" disabled>
+              <i class="bi bi-check-circle-fill me-1"></i> Already Shortlisted
+            </button>
+          {% endif %}
+
+          <a href="{{ url_for('schedule_interview', id=candidate.id) }}" class="btn btn-primary fw-semibold">
+            <i class="bi bi-calendar-plus me-1"></i> Schedule Interview
+          </a>
+
+          {% if candidate.status != 'Rejected' %}
+            <a href="{{ url_for('reject_candidate', id=candidate.id) }}" class="btn btn-outline-danger fw-semibold" onclick="return confirm('Reject this candidate?');">
+              <i class="bi bi-x-circle me-1"></i> Reject Candidate
+            </a>
+          {% endif %}
+        </div>
+
+        <hr>
+
+        <div class="small text-muted">
+          <div><i class="bi bi-briefcase me-1"></i> Job: <strong>{{ candidate.job_title }}</strong></div>
+          <div class="mt-1"><i class="bi bi-clock me-1"></i> Uploaded: {{ candidate.created_at[:16] }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scheduled Interviews if any -->
+    {% if interviews %}
+      <div class="custom-card">
+        <div class="card-header">
+          <span><i class="bi bi-calendar-event me-2"></i> Scheduled Interview</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {% for interview in interviews %}
+              <div class="list-group-item p-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="text-dark">{{ interview.date }} at {{ interview.time }}</strong>
+                  <span class="badge bg-primary-subtle text-primary border">{{ interview.interview_type }}</span>
+                </div>
+                <div class="small text-muted mb-2">
+                  Status: <span class="fw-semibold">{{ interview.status }}</span>
+                </div>
+                {% if interview.meeting_link %}
+                  <div class="small text-truncate">
+                    <a href="{{ interview.meeting_link }}" target="_blank" class="text-primary">
+                      <i class="bi bi-link-45deg"></i> Join Meeting
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

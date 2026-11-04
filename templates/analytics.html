@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports & Charts - Resume Screener{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Reports & Charts</h3>
+    <p class="text-muted small mb-0">Simple visual summary of your jobs, candidate scores, and interview statuses.</p>
+  </div>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-house me-1"></i> Back to Dashboard
+  </a>
+</div>
+
+<!-- Simple Metric Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-primary fs-3">{{ stats.total_candidates }}</div>
+        <div class="stat-label small">Candidates</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-secondary fs-3">{{ stats.total_jobs }}</div>
+        <div class="stat-label small">Jobs Posted</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-success fs-3">{{ stats.shortlisted }}</div>
+        <div class="stat-label small">Shortlisted</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-danger fs-3">{{ stats.rejected }}</div>
+        <div class="stat-label small">Rejected</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-warning fs-3">{{ stats.pending }}</div>
+        <div class="stat-label small">Pending</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card p-3">
+      <div>
+        <div class="stat-value text-info fs-3">{{ stats.interviews_scheduled }}</div>
+        <div class="stat-label small">Interviews</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4">
+  <!-- Chart 1: Candidate Status -->
+  <div class="col-lg-6">
+    <div class="custom-card h-100">
+      <div class="card-header">
+        <span><i class="bi bi-pie-chart text-primary me-2"></i> Candidate Status</span>
+      </div>
+      <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 320px;">
+        {% if stats.total_candidates > 0 %}
+          <div style="width: 100%; max-width: 320px;">
+            <canvas id="statusChart"></canvas>
+          </div>
+        {% else %}
+          <div class="text-center text-muted p-4">
+            <i class="bi bi-bar-chart fs-1 d-block mb-2 text-secondary opacity-50"></i>
+            No candidates uploaded yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 2: Match Score Groups -->
+  <div class="col-lg-6">
+    <div class="custom-card h-100">
+      <div class="card-header">
+        <span><i class="bi bi-bar-chart text-success me-2"></i> Score Ranges (0% to 100%)</span>
+      </div>
+      <div class="card-body" style="min-height: 320px;">
+        {% if stats.total_candidates > 0 %}
+          <canvas id="scoreChart"></canvas>
+        {% else %}
+          <div class="text-center text-muted p-4">
+            <i class="bi bi-bar-chart fs-1 d-block mb-2 text-secondary opacity-50"></i>
+            No candidate scores available yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 3: Candidates per Job -->
+  <div class="col-12">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-briefcase text-info me-2"></i> Candidates per Job</span>
+      </div>
+      <div class="card-body" style="min-height: 320px;">
+        {% if jobs_distribution and jobs_distribution.labels %}
+          <canvas id="jobChart"></canvas>
+        {% else %}
+          <div class="text-center text-muted p-4">
+            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+            No job applications to display.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Chart 1: Candidate Status
+  const statusCtx = document.getElementById('statusChart');
+  if (statusCtx) {
+    new Chart(statusCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pending', 'Shortlisted', 'Interview Scheduled', 'Rejected'],
+        datasets: [{
+          data: [
+            {{ stats.pending }},
+            {{ stats.shortlisted }},
+            {{ stats.interviews_scheduled }},
+            {{ stats.rejected }}
+          ],
+          backgroundColor: [
+            '#f59e0b', // Pending
+            '#10b981', // Shortlisted
+            '#3b82f6', // Interview
+            '#ef4444'  // Rejected
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 14, font: { family: 'Inter', size: 12 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Chart 2: Score Ranges (0-20%, 21-40%, 41-60%, 61-80%, 81-100%)
+  const scoreCtx = document.getElementById('scoreChart');
+  if (scoreCtx) {
+    new Chart(scoreCtx, {
+      type: 'bar',
+      data: {
+        labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+        datasets: [{
+          label: 'Candidates Count',
+          data: [
+            {{ score_buckets['0_20'] }},
+            {{ score_buckets['21_40'] }},
+            {{ score_buckets['41_60'] }},
+            {{ score_buckets['61_80'] }},
+            {{ score_buckets['81_100'] }}
+          ],
+          backgroundColor: [
+            '#94a3b8',
+            '#60a5fa',
+            '#3b82f6',
+            '#2563eb',
+            '#10b981'
+          ],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, precision: 0 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  // Chart 3: Candidates Per Job
+  const jobCtx = document.getElementById('jobChart');
+  if (jobCtx) {
+    const jobLabels = {{ jobs_distribution.labels|tojson }};
+    const jobCounts = {{ jobs_distribution.counts|tojson }};
+
+    new Chart(jobCtx, {
+      type: 'bar',
+      data: {
+        labels: jobLabels,
+        datasets: [{
+          label: 'Candidates',
+          data: jobCounts,
+          backgroundColor: '#4f46e5',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, precision: 0 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

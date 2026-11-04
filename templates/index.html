@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Screener - Home{% endblock %}
+
+{% block public_content %}
+<!-- Simple Hero Section -->
+<section class="hero-section text-center py-5">
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <span class="badge bg-primary-subtle text-primary border px-3 py-2 rounded-pill fw-semibold mb-3">
+          <i class="bi bi-stars"></i> Simple & Fast Resume Screening
+        </span>
+        <h1 class="hero-title mb-3">Resume Screener</h1>
+        <p class="hero-subtitle mb-4">
+          An easy-to-use tool to match resumes with job descriptions. Recruiters post jobs and rank applicants by match score. Candidates upload resumes and see their results.
+        </p>
+
+        <!-- Two Registration Choices -->
+        <div class="d-flex flex-wrap gap-3 justify-content-center mb-5">
+          <a href="{{ url_for('register', role='recruiter') }}" class="btn btn-primary btn-lg px-4 shadow-sm">
+            <i class="bi bi-briefcase me-2"></i> Register as Recruiter
+          </a>
+          <a href="{{ url_for('register', role='candidate') }}" class="btn btn-outline-primary btn-lg px-4 shadow-sm">
+            <i class="bi bi-person me-2"></i> Register as Candidate
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Easy Steps / Features -->
+    <div class="row g-4 mt-2 text-start">
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper icon-fs">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
+          <h6 class="fw-bold text-dark">1. Candidates Apply</h6>
+          <p class="text-muted small mb-0">Candidates choose an open job and submit their PDF or Word (.docx) resume from their portal.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper icon-ml">
+            <i class="bi bi-calculator"></i>
+          </div>
+          <h6 class="fw-bold text-dark">2. Calculate Match Score</h6>
+          <p class="text-muted small mb-0">Compares resume skills with job requirements using TF-IDF and shows a percentage score from 0% to 100%.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper icon-os">
+            <i class="bi bi-arrow-repeat"></i>
+          </div>
+          <h6 class="fw-bold text-dark">3. Background Worker</h6>
+          <p class="text-muted small mb-0">Uses a background task queue so resumes are processed smoothly without slowing down the website.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper icon-se">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+          <h6 class="fw-bold text-dark">4. Schedule Interviews</h6>
+          <p class="text-muted small mb-0">Recruiters shortlist candidates and set interview dates and meeting links in one click.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

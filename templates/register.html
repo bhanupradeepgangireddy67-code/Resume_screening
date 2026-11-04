@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Resume Screener{% endblock %}
+
+{% block public_content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5 bg-white">
+        <div class="text-center mb-4">
+          <div class="brand-icon d-inline-block mb-3" style="font-size: 1.5rem;">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <h3 class="fw-bold text-dark">Create Your Account</h3>
+          <p class="text-muted small">Choose your role to get started with Resume Screener</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}">
+          <!-- Role Selection (Two Registering Persons) -->
+          <div class="mb-4">
+            <label class="form-label fw-bold d-block text-dark">I am registering as: <span class="text-danger">*</span></label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="role_recruiter" value="recruiter" {% if selected_role != 'candidate' %}checked{% endif %}>
+                <label class="btn btn-outline-primary w-100 py-2 d-flex flex-column align-items-center" for="role_recruiter">
+                  <i class="bi bi-briefcase fs-4 mb-1"></i>
+                  <strong>Recruiter</strong>
+                  <small style="font-size: 0.7rem;">Hire & Screen</small>
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="role_candidate" value="candidate" {% if selected_role == 'candidate' %}checked{% endif %}>
+                <label class="btn btn-outline-primary w-100 py-2 d-flex flex-column align-items-center" for="role_candidate">
+                  <i class="bi bi-person-badge fs-4 mb-1"></i>
+                  <strong>Candidate</strong>
+                  <small style="font-size: 0.7rem;">Apply & Upload</small>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">Full Name</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control border-start-0" id="name" name="name" placeholder="Enter your full name" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Email Address</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope"></i></span>
+              <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="name@example.com" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label fw-semibold">Password</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="Min. 6 characters" required minlength="6">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="confirm_password" class="form-label fw-semibold">Confirm Password</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-shield-lock"></i></span>
+              <input type="password" class="form-control border-start-0" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="6">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+            <i class="bi bi-check2-circle me-1"></i> Create Account
+          </button>
+        </form>
+
+        <div class="text-center mt-4">
+          <p class="text-muted small mb-0">Already have an account? 
+            <a href="{{ url_for('login') }}" class="fw-semibold">Log In here</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

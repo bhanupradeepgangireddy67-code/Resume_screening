@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - Job Details{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h3 class="fw-bold text-dark mb-0">{{ job.title }}</h3>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Job #{{ job.id }}</span>
+    </div>
+    <p class="text-muted small mb-0">Posted on {{ job.created_at[:10] }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('edit_job', id=job.id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil me-1"></i> Edit Job
+    </a>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Job Details -->
+  <div class="col-lg-8">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-file-text me-2"></i> Job Description & Requirements</span>
+      </div>
+      <div class="card-body">
+        <h6 class="fw-bold text-dark mb-2">Description</h6>
+        <p class="text-secondary" style="white-space: pre-line;">{{ job.description }}</p>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold text-dark mb-2">Required Skills</h6>
+        <div class="mb-3">
+          {% for skill in job.skills.split(',') %}
+            <span class="skill-tag fs-6 py-1 px-3 mb-2">{{ skill.strip() }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="row g-3 pt-2">
+          <div class="col-sm-6">
+            <span class="text-muted small d-block">Education:</span>
+            <strong class="text-dark">{{ job.education or 'Any' }}</strong>
+          </div>
+          <div class="col-sm-6">
+            <span class="text-muted small d-block">Experience:</span>
+            <strong class="text-dark">{{ job.experience or 'Fresher' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidates Count Summary -->
+  <div class="col-lg-4">
+    <div class="custom-card">
+      <div class="card-header">
+        <span><i class="bi bi-bar-chart me-2"></i> Candidate Summary</span>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <span>Total Candidates</span>
+            <span class="badge bg-primary rounded-pill">{{ candidates|length }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <span>Shortlisted</span>
+            <span class="badge bg-success rounded-pill">{{ candidates|selectattr('status', 'equalto', 'Shortlisted')|list|length }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <span>Interviews</span>
+            <span class="badge bg-info rounded-pill">{{ candidates|selectattr('status', 'equalto', 'Interview Scheduled')|list|length }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <span>Rejected</span>
+            <span class="badge bg-danger rounded-pill">{{ candidates|selectattr('status', 'equalto', 'Rejected')|list|length }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ranked Candidates List -->
+<div class="custom-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-people me-2"></i> Candidates for this Job ({{ candidates|length }})</span>
+  </div>
+  <div class="card-body p-0">
+    {% if candidates %}
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Candidate Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Match Score</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cand in candidates %}
+              <tr>
+                <td class="fw-bold text-muted">#{{ loop.index }}</td>
+                <td>
+                  <a href="{{ url_for('candidate_details', id=cand.id) }}" class="fw-bold text-dark">
+                    {{ cand.name }}
+                  </a>
+                </td>
+                <td>{{ cand.email }}</td>
+                <td>{{ cand.phone }}</td>
+                <td style="min-width: 140px;">
+                  <div class="score-wrapper">
+                    <span class="fw-bold small {% if cand.match_score >= 70 %}text-success{% elif cand.match_score >= 40 %}text-primary{% else %}text-secondary{% endif %}">
+                      {{ cand.match_score }}%
+                    </span>
+                    <div class="score-bar">
+                      <div class="score-fill {% if cand.match_score >= 70 %}bg-success{% elif cand.match_score >= 40 %}bg-primary{% else %}bg-secondary{% endif %}"
+                           style="width: {{ cand.match_score }}%;"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if cand.status == 'Shortlisted' %}
+                    <span class="badge-status badge-shortlisted">Shortlisted</span>
+                  {% elif cand.status == 'Rejected' %}
+                    <span class="badge-status badge-rejected">Rejected</span>
+                  {% elif cand.status == 'Interview Scheduled' %}
+                    <span class="badge-status badge-interview">Interview</span>
+                  {% else %}
+                    <span class="badge-status badge-pending">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('candidate_details', id=cand.id) }}" class="btn btn-sm btn-outline-primary py-1 px-2">
+                    View
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 text-center text-muted">
+        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+        No candidates have applied for this job yet.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
